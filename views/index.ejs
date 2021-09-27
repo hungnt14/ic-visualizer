@@ -1,0 +1,111 @@
+<!DOCTYPE html lang="vi">
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Image-captioning</title>
+    <link rel="shorcut icon" href="/images/logo_uit.png" type="image/x-icon"/>
+    <link rel='stylesheet' href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat&display=swap" rel="stylesheet">
+    <style>
+      body {
+      
+      }
+      .error {
+          background-color: coral;
+          margin-bottom: 10px;
+          padding: 10px;
+          border-radius: 10px;
+      }
+      #show-img {
+        width: 70%;
+        height: 70%;
+        object-fit: contain;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <h3 class="col s9">Image-captioning visualizer </h3>
+      </div>
+      <div>
+        <% if (errorCode) { %>
+          <div id="error" class="error">
+            <i class="material-icons" style="vertical-align: middle;">error_outline</i> <b>Error: <%= errorMsg %></b>
+          </div>
+        <% } %>
+        <!-- Search Box -->
+        <div class="row">
+          <form class="col s12" method="GET">
+            <div class="row">
+              <div class="input-field col s11">
+                <i class="material-icons prefix">search</i>
+                <input id="viewFrom" name="viewFrom" type="text" class="validate" placeholder="Ex: 31231.jpg" required>
+                <label for="viewFrom">Image filename</label>
+              </div>
+              <div class="input-field col s1">
+                <input type="submit" class="btn" value="Search">
+              </div>
+            </div>
+          </form>
+        </div>
+        
+        <!-- Image info -->
+        <div align="center">
+          <h5><span id="id"></span></h5>
+          <h5>Caption: <span id="caption"></span></h5>
+        </div>
+        <!-- Image frame -->
+        <div class="row" align="center">
+          <div class="col s1">
+            <a onclick="move('prev');" class="waves-effect waves-light btn-large"><i class="material-icons">arrow_back</i></a>
+          </div>
+          <div class="col s10">
+            <img id="show-img" src="/images/images_public_test/<%= viewFrom %>" alt="">
+          </div>
+          <div class="col s1">
+            <a onclick="move('next');" class="waves-effect waves-light btn-large"><i class="material-icons">arrow_forward</i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+  <script>
+    var currentView = "<%= viewFrom %>";
+    document.getElementById("id").innerHTML = currentView;
+    getCaption("<%= viewFrom %>");
+
+    function getCaption(filename) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          caption = JSON.parse(this.responseText);
+          document.getElementById("caption").innerHTML = caption.caption;
+        }
+      };
+      xhttp.open("GET", "http://" + window.location.hostname + ":3000/getCaption?filename=" + filename, true);
+      xhttp.send();
+    }
+    function move(direction) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          id = JSON.parse(this.responseText);
+          document.getElementById("id").innerHTML = id.id;
+          document.getElementById("show-img").src = "/images/images_public_test/" + id.id;
+          currentView = id.id;
+          getCaption(id.id);
+        }
+      };
+      xhttp.open("GET", "http://" + window.location.hostname + ":3000/getImage?filename=" + currentView + "&move=" + direction, true);
+      xhttp.send();
+    }
+  </script>
+</html>
